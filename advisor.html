@@ -2,214 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Safe Setup Advisor</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 0;
-    }
-    .advisor-container {
-      max-width: 500px;
-      margin: 80px auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      padding: 32px;
-    }
-    h2 {
-      margin-bottom: 24px;
-      font-size: 1.5rem;
-      text-align: center;
-      color: #111;
-    }
-    label {
-      display: block;
-      margin: 16px 0 8px;
-      font-weight: bold;
-    }
-    select, input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .options {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .options button {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #111;
-      border-radius: 4px;
-      background: #fff;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-    .options button.active {
-      background: #111;
-      color: #fff;
-    }
-    button#show-plan {
-      margin-top: 24px;
-      width: 100%;
-      padding: 12px;
-      background: #111;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: bold;
-    }
-    .plan {
-      margin-top: 32px;
-      border-top: 1px solid #eee;
-      padding-top: 24px;
-    }
-    .plan h3 {
-      margin-bottom: 16px;
-      font-size: 1.25rem;
-    }
-    .plan ul {
-      list-style: disc;
-      padding-left: 20px;
-      color: #555;
-    }
-    .plan .cta {
-      margin-top: 24px;
-      text-align: center;
-    }
-    .plan .cta a {
-      display: inline-block;
-      margin: 0 8px;
-      padding: 10px 24px;
-      border-radius: 4px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .plan .cta a.primary {
-      background: #111;
-      color: #fff;
-    }
+    body { margin:0; font-family:Arial,sans-serif; background:#f5f5f5; }
+    .advisor { max-width:600px; margin:60px auto; padding:32px; background:#fff; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.05); }
+    h2, h4 { margin:0 0 16px; color:#111; }
+    label { display:block; margin:16px 0 8px; font-weight:600; }
+    .slider { width:100%; }
+    .crossfader { position:relative; height:8px; background:#eee; border-radius:4px; margin:16px 0; }
+    .fader-knob { position:absolute; top:-4px; width:16px; height:16px; background:#111; border-radius:50%; cursor:grab; }
+    .options { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .options button { padding:12px; border:1px solid #111; border-radius:4px; background:#fff; cursor:pointer; transition:background .2s,color .2s; }
+    .options button.active { background:#111; color:#fff; }
+    input[type=number] { width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; }
+    .plan { margin-top:32px; border-top:1px solid #eee; padding-top:24px; }
+    .plan h4 { margin-bottom:16px; }
+    .plan ul { padding-left:20px; color:#555; }
+    .plan li { margin-bottom:8px; position:relative; }
+    .plan li:hover .tooltip { opacity:1; pointer-events:auto; }
+    .tooltip { position:absolute; top:0; left:110%; width:200px; padding:8px; background:#333; color:#fff; border-radius:4px; font-size:0.875rem; opacity:0; pointer-events:none; transition:opacity .2s; }
+    .cta { text-align:center; margin-top:24px; }
+    .cta a, .cta button { padding:10px 24px; margin:0 8px; border-radius:4px; font-weight:600; text-decoration:none; }
+    .cta a.primary { background:#111; color:#fff; }
+    .cta a.download { background:#fff; color:#111; border:1px solid #111; }
   </style>
 </head>
 <body>
 
-  <script src="https://unpkg.com/alpinejs@3.x.x" defer></script>
+<script src="https://unpkg.com/alpinejs@3.x.x" defer></script>
 
-  <div x-data="safeAdvisor()" class="advisor-container">
-    <h2>Configure Your Safe Wallet</h2>
+<div x-data="safeAdvisor()" class="advisor">
+  <h2>Safe Setup Advisor</h2>
 
-    <!-- Security Profile -->
-    <label>Security Profile</label>
-    <div class="options">
-      <button 
-        :class="{ 'active': answers.profile==='essential' }" 
-        @click="answers.profile='essential'">
-        Essential (< $1M TVL)
-      </button>
-      <button 
-        :class="{ 'active': answers.profile==='treasury' }" 
-        @click="answers.profile='treasury'">
-        Treasury-grade (> $1M TVL)
-      </button>
-    </div>
-
-    <!-- Use Case -->
-    <label>Primary Use Case</label>
-    <div class="options">
-      <button 
-        :class="{ 'active': answers.useCase==='treasury' }" 
-        @click="answers.useCase='treasury'">
-        Treasury Management
-      </button>
-      <button 
-        :class="{ 'active': answers.useCase==='defi' }" 
-        @click="answers.useCase='defi'">
-        DeFi Trading & Staking
-      </button>
-      <button 
-        :class="{ 'active': answers.useCase==='hybrid' }" 
-        @click="answers.useCase='hybrid'">
-        Both
-      </button>
-    </div>
-
-    <!-- Team Members -->
-    <label>How many team members?</label>
-    <input 
-      type="number" 
-      min="2" 
-      max="20" 
-      placeholder="e.g. 3" 
-      x-model.number="answers.teamSize" />
-
-    <!-- Show Plan Button -->
-    <button 
-      id="show-plan" 
-      @click="showPlan = true" 
-      :disabled="!answers.profile || !answers.useCase || !answers.teamSize">
-      Show My Plan
-    </button>
-
-    <!-- Recommendation Plan -->
-    <template x-if="showPlan">
-      <div class="plan">
-        <h3>Your Custom Safe Plan</h3>
-        <ul>
-          <template x-for="(item, idx) in recommendation" :key="idx">
-            <li x-text="item"></li>
-          </template>
-        </ul>
-        <div class="cta">
-          <a href="/app" class="primary">Launch Wallet</a>
-        </div>
-      </div>
-    </template>
+  <!-- Threat Slider -->
+  <label>Threat Profile</label>
+  <input type="range" min="0" max="100" step="25" x-model="threat" class="slider"/>
+  <div style="display:flex;justify-between;font-size:0.875rem;color:#555;">
+    <span>Low-stakes</span><span>Retail</span><span>DAOs</span><span>Large</span><span>Enterprise-grade</span>
   </div>
 
-  <script>
-    function safeAdvisor() {
-      return {
-        answers: { profile: null, useCase: null, teamSize: null },
-        showPlan: false,
-        get recommendation() {
-          const { profile, teamSize } = this.answers;
-          const plan = [];
+  <!-- Cross-Fader -->
+  <div class="crossfader" @mousedown.prevent="dragging = true" @mouseup="dragging = false" @mousemove="onDrag($event)">
+    <div class="fader-knob" :style="`left: calc(${threat}% - 8px);`"></div>
+  </div>
 
-          // signer recommendation based on team size
-          if (teamSize < 4) {
-            plan.push(`${teamSize}-of-${teamSize} multisig`);
-          } else if (teamSize <= 7) {
-            plan.push(`3-of-${teamSize} multisig (requires 3 approvals)`);
-          } else {
-            plan.push(`4-of-${teamSize} multisig (requires 4 approvals)`);
-          }
+  <!-- Inputs -->
+  <label>Primary Use Case</label>
+  <div class="options">
+    <button :class="{active:answers.useCase==='treasury'}" @click="answers.useCase='treasury'">Treasury</button>
+    <button :class="{active:answers.useCase==='defi'}" @click="answers.useCase='defi'">DeFi</button>
+    <button :class="{active:answers.useCase==='hybrid'}" @click="answers.useCase='hybrid'">Both</button>
+  </div>
 
-          // daily cap based on profile
-          if (profile === 'essential') {
-            plan.push('Daily spend cap: 10% of average volume');
-          } else {
-            plan.push('Daily spend cap: 5% of TVL');
-          }
+  <label>Team Members</label>
+  <input type="number" min="2" max="20" x-model.number="answers.teamSize" placeholder="e.g. 3"/>
 
-          // recovery recommendation
-          plan.push('Recovery: social recovery module + hardware fallback');
+  <label>Recovery Style</label>
+  <div class="options">
+    <button :class="{active:answers.recovery==='social'}" @click="answers.recovery='social'">Social</button>
+    <button :class="{active:answers.recovery==='hardware'}" @click="answers.recovery='hardware'">Hardware</button>
+    <button :class="{active:answers.recovery==='seed'}" @click="answers.recovery='seed'">Seed Phrase</button>
+  </div>
 
-          return plan;
-        },
-        reset() {
-          this.answers = { profile: null, useCase: null, teamSize: null };
-          this.showPlan = false;
-        }
-      }
+  <!-- Real-Time Plan -->
+  <div class="plan">
+    <h4>Your Blueprint</h4>
+    <ul>
+      <template x-for="(line,i) in recommendation" :key="i">
+        <li x-text="line">
+          <span class="tooltip" x-text="tooltips[i]"></span>
+        </li>
+      </template>
+    </ul>
+  </div>
+
+  <!-- CTAs -->
+  <div class="cta">
+    <a href="/app" class="primary">Launch Wallet</a>
+    <a href="#" @click.prevent="downloadPDF()" class="download">Download PDF</a>
+  </div>
+</div>
+
+<script>
+function safeAdvisor(){
+  return {
+    threat: 50,
+    dragging: false,
+    answers: { useCase:null, teamSize:null, recovery:null },
+    tooltips: [
+      'Groups of 2-of-N for small teams balance ease & security.',
+      'Daily caps limit exposure to market swings.',
+      'Social + hardware prevents single-point failures.',
+      'Seed-phrase is fallback but riskier if alone.'
+    ],
+    get recommendation(){
+      const rec=[]
+      const n = this.answers.teamSize||3
+      if(n<4) rec.push(`${n}-of-${n} multisig`)
+      else if(n<=7) rec.push(`3-of-${n} multisig`)
+      else rec.push(`4-of-${n} multisig`)
+      rec.push(this.threat<50 
+        ? 'Daily cap: 10% volume' 
+        : 'Daily cap: 5% TVL')
+      rec.push(this.answers.recovery==='seed' 
+        ? 'Recovery: seed phrase fallback' 
+        : 'Recovery: social + hardware')
+      return rec
+    },
+    onDrag(e){
+      if(!this.dragging) return
+      const rect = e.currentTarget.getBoundingClientRect()
+      let pct = ((e.clientX - rect.left)/rect.width)*100
+      this.threat = Math.max(0, Math.min(100, pct))
+    },
+    downloadPDF(){
+      alert('PDF download stub—implement as needed.')
     }
-  </script>
+  }
+}
+</script>
 
 </body>
 </html>
