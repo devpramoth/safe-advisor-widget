@@ -12,59 +12,79 @@
       padding: 0;
     }
     .advisor-container {
-      max-width: 480px;
+      max-width: 500px;
       margin: 80px auto;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       padding: 32px;
     }
-    h4 {
-      margin-bottom: 16px;
-      font-size: 1.25rem;
+    h2 {
+      margin-bottom: 24px;
+      font-size: 1.5rem;
+      text-align: center;
       color: #111;
     }
-    button.option {
+    label {
       display: block;
+      margin: 16px 0 8px;
+      font-weight: bold;
+    }
+    select, input[type="number"] {
       width: 100%;
-      text-align: left;
-      padding: 12px;
-      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .options button {
+      flex: 1;
+      padding: 10px;
       border: 1px solid #111;
       border-radius: 4px;
       background: #fff;
       cursor: pointer;
       transition: background 0.2s, color 0.2s;
     }
-    button.option.active {
+    .options button.active {
       background: #111;
       color: #fff;
     }
-    button#next {
-      margin-top: 20px;
-      padding: 12px 20px;
+    button#show-plan {
+      margin-top: 24px;
+      width: 100%;
+      padding: 12px;
       background: #111;
       color: #fff;
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 1rem;
       font-weight: bold;
     }
-    button#next:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .plan {
+      margin-top: 32px;
+      border-top: 1px solid #eee;
+      padding-top: 24px;
     }
-    ul.recommendations {
-      list-style-type: disc;
+    .plan h3 {
+      margin-bottom: 16px;
+      font-size: 1.25rem;
+    }
+    .plan ul {
+      list-style: disc;
       padding-left: 20px;
-      margin: 16px 0;
+      color: #555;
     }
-    .cta-links {
+    .plan .cta {
       margin-top: 24px;
       text-align: center;
     }
-    .cta-links a,
-    .cta-links button {
+    .plan .cta a {
       display: inline-block;
       margin: 0 8px;
       padding: 10px 24px;
@@ -72,121 +92,120 @@
       text-decoration: none;
       font-weight: bold;
     }
-    .cta-links a.primary {
+    .plan .cta a.primary {
       background: #111;
       color: #fff;
-    }
-    .cta-links button.secondary {
-      background: #fff;
-      color: #111;
-      border: 1px solid #111;
-      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <!-- Include Alpine.js -->
   <script src="https://unpkg.com/alpinejs@3.x.x" defer></script>
 
-  <!-- Advisor Widget -->
   <div x-data="safeAdvisor()" class="advisor-container">
-    <!-- Question Steps -->
-    <template x-if="step < questions.length">
-      <div>
-        <h4 x-text="questions[step].label"></h4>
-        <template x-for="opt in questions[step].options" :key="opt.value">
-          <button
-            class="option"
-            :class="{ 'active': answers[questions[step].id] === opt.value }"
-            @click="answers[questions[step].id] = opt.value"
-            x-text="opt.label">
-          </button>
-        </template>
-        <button
-          id="next"
-          @click="step++"
-          :disabled="!answers[questions[step].id]">
-          Next
-        </button>
-      </div>
-    </template>
+    <h2>Configure Your Safe Wallet</h2>
 
-    <!-- Recommendation Result -->
-    <template x-if="step === questions.length">
-      <div>
-        <h4>Your Custom Safe Plan</h4>
-        <ul class="recommendations">
-          <template x-for="(line, i) in recommendation" :key="i">
-            <li x-text="line"></li>
+    <!-- Security Profile -->
+    <label>Security Profile</label>
+    <div class="options">
+      <button 
+        :class="{ 'active': answers.profile==='essential' }" 
+        @click="answers.profile='essential'">
+        Essential (< $1M TVL)
+      </button>
+      <button 
+        :class="{ 'active': answers.profile==='treasury' }" 
+        @click="answers.profile='treasury'">
+        Treasury-grade (> $1M TVL)
+      </button>
+    </div>
+
+    <!-- Use Case -->
+    <label>Primary Use Case</label>
+    <div class="options">
+      <button 
+        :class="{ 'active': answers.useCase==='treasury' }" 
+        @click="answers.useCase='treasury'">
+        Treasury Management
+      </button>
+      <button 
+        :class="{ 'active': answers.useCase==='defi' }" 
+        @click="answers.useCase='defi'">
+        DeFi Trading & Staking
+      </button>
+      <button 
+        :class="{ 'active': answers.useCase==='hybrid' }" 
+        @click="answers.useCase='hybrid'">
+        Both
+      </button>
+    </div>
+
+    <!-- Team Members -->
+    <label>How many team members?</label>
+    <input 
+      type="number" 
+      min="2" 
+      max="20" 
+      placeholder="e.g. 3" 
+      x-model.number="answers.teamSize" />
+
+    <!-- Show Plan Button -->
+    <button 
+      id="show-plan" 
+      @click="showPlan = true" 
+      :disabled="!answers.profile || !answers.useCase || !answers.teamSize">
+      Show My Plan
+    </button>
+
+    <!-- Recommendation Plan -->
+    <template x-if="showPlan">
+      <div class="plan">
+        <h3>Your Custom Safe Plan</h3>
+        <ul>
+          <template x-for="(item, idx) in recommendation" :key="idx">
+            <li x-text="item"></li>
           </template>
         </ul>
-        <div class="cta-links">
+        <div class="cta">
           <a href="/app" class="primary">Launch Wallet</a>
-          <button class="secondary" @click="reset()">Try Again</button>
         </div>
       </div>
     </template>
   </div>
 
-  <!-- Widget Logic -->
   <script>
     function safeAdvisor() {
       return {
-        step: 0,
-        answers: {},
-        questions: [
-          {
-            id: 'profile',
-            label: 'Select your security profile',
-            options: [
-              { value: 'essential', label: 'Essential security (< $1M TVL)' },
-              { value: 'treasury',  label: 'Treasury-grade (> $1M TVL)' }
-            ]
-          },
-          {
-            id: 'useCase',
-            label: 'Primary use case',
-            options: [
-              { value: 'treasury', label: 'Treasury management' },
-              { value: 'defi',     label: 'DeFi trading & staking' },
-              { value: 'hybrid',   label: 'Both' }
-            ]
-          },
-          {
-            id: 'signers',
-            label: 'How many co-signers?',
-            options: [
-              { value: '2-3', label: '2 of 3' },
-              { value: '3-5', label: '3 of 5' },
-              { value: '4-7', label: '4 of 7' }
-            ]
-          }
-        ],
+        answers: { profile: null, useCase: null, teamSize: null },
+        showPlan: false,
         get recommendation() {
-          const { profile, signers } = this.answers;
-          if (profile === 'essential' && signers === '2-3') {
-            return [
-              '2-of-3 (mobile, hardware key, co-signer)',
-              'Daily spend cap: 10% of avg. volume',
-              'Recovery: social recovery module'
-            ];
+          const { profile, teamSize } = this.answers;
+          const plan = [];
+
+          // signer recommendation based on team size
+          if (teamSize < 4) {
+            plan.push(`${teamSize}-of-${teamSize} multisig`);
+          } else if (teamSize <= 7) {
+            plan.push(`3-of-${teamSize} multisig (requires 3 approvals)`);
+          } else {
+            plan.push(`4-of-${teamSize} multisig (requires 4 approvals)`);
           }
-          if (profile === 'treasury' && signers === '3-5') {
-            return [
-              '3-of-5 (2 hardware keys, 2 co-signers, 1 mobile)',
-              'Daily spend cap: 5% of TVL',
-              'Recovery: social + hardware fallback'
-            ];
+
+          // daily cap based on profile
+          if (profile === 'essential') {
+            plan.push('Daily spend cap: 10% of average volume');
+          } else {
+            plan.push('Daily spend cap: 5% of TVL');
           }
-          return [
-            'Standard 2-of-3 setup',
-            'Adjust limits and recovery as needed'
-          ];
+
+          // recovery recommendation
+          plan.push('Recovery: social recovery module + hardware fallback');
+
+          return plan;
         },
         reset() {
-          this.step = 0;
-          this.answers = {};
+          this.answers = { profile: null, useCase: null, teamSize: null };
+          this.showPlan = false;
         }
       }
     }
